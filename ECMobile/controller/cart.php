@@ -35,6 +35,10 @@ if (empty($tmp[0])) {
 	GZ_Api::outPut(101);
 }
 switch ($tmp[0]) {
+    case 'clean':
+        clear_cart();
+        GZ_Api::outPut(array());
+	    break;
 	case 'create':
 		$goods_id = _POST('goods_id', 0);
 		$goods_number = _POST('number', 0);
