@@ -57,7 +57,8 @@ foreach ($consignee_list as $key => $value) {
 	$result[$key]['consignee'] = $value['consignee'];
 
 	$result[$key]['address'] = $value['address'];
-
+	
+	$result[$key]['mobile'] = $value['mobile'];
 
 	$country = $value['country'];
 	$sql1 = "SELECT * FROM " . $GLOBALS['ecs']->table('region') .
