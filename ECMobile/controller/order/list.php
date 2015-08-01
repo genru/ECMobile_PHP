@@ -131,7 +131,7 @@ function GZ_get_user_orders($user_id, $num = 10, $start = 0, $type = 'await_pay'
     /* 取得订单列表 */
     $arr    = array();
 
-    $sql = "SELECT order_id, order_sn, order_status, shipping_status, pay_status, add_time, " .
+    $sql = "SELECT order_id, order_sn, order_status, shipping_status, pay_status, add_time, consignee,province,city,district,address," .
            "(goods_amount + shipping_fee + insure_fee + pay_fee + pack_fee + card_fee + tax - discount) AS total_fee ".
            " FROM " .$GLOBALS['ecs']->table('order_info') .
            " WHERE user_id = '$user_id' " . GZ_order_query_sql($type) . " ORDER BY add_time DESC";
@@ -139,6 +139,28 @@ function GZ_get_user_orders($user_id, $num = 10, $start = 0, $type = 'await_pay'
     $res = $GLOBALS['db']->SelectLimit($sql, $num, $start);
    	while ($row = $GLOBALS['db']->fetchRow($res))
     {
+        $a = array();
+        
+        $province = $row['province'];
+        $sql2 = "SELECT * FROM " . $GLOBALS['ecs']->table('region') .
+              " WHERE region_id = '$province'";
+        $province = $GLOBALS['db']->getAll($sql2);
+        $a['province_name'] = $province[0]['region_name'];
+        
+        $city = $row['city'];
+        $sql3 = "SELECT * FROM " . $GLOBALS['ecs']->table('region') .
+              " WHERE region_id = '$city'";
+        $city = $GLOBALS['db']->getAll($sql3);
+        $a['city_name'] = $city[0]['region_name'];
+        
+        $district = $row['district'];
+        $sql4 = "SELECT * FROM " . $GLOBALS['ecs']->table('region') .
+              " WHERE region_id = '$district'";
+        $district = $GLOBALS['db']->getAll($sql4);
+        $a['district_name'] = $district[0]['region_name'];
+
+        $a['consignee'] = $row['consignee'];
+        $a['address']   = $row['address'];
 
         $row['shipping_status'] = ($row['shipping_status'] == SS_SHIPPED_ING) ? SS_PREPARING : $row['shipping_status'];
         $row['order_status'] = $GLOBALS['_LANG']['os'][$row['order_status']] . ',' . $GLOBALS['_LANG']['ps'][$row['pay_status']] . ',' . $GLOBALS['_LANG']['ss'][$row['shipping_status']];
@@ -147,7 +169,8 @@ function GZ_get_user_orders($user_id, $num = 10, $start = 0, $type = 'await_pay'
                        'order_sn'       => $row['order_sn'],
                        'order_time'     => local_date($GLOBALS['_CFG']['time_format'], $row['add_time']),
                        'order_status'   => $row['order_status'],
-                       'total_fee'      => price_format($row['total_fee'], false));
+                       'total_fee'      => price_format($row['total_fee'], false),
+                       'consignee'      => $a);
     }
 
     return $arr;
