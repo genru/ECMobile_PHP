@@ -45,7 +45,7 @@ $type = _POST('type', 'await_pay');
 //shipped 待收货
 //finished 历史订单
 if (!in_array($type, array('await_pay', 'await_ship', 'shipped', 'finished', 'unconfirmed'))) {
-	GZ_Api::outPut(101);
+  GZ_Api::outPut(101);
 }
 $record_count = $db->getOne("SELECT COUNT(*) FROM " .$ecs->table('order_info'). " WHERE user_id = '$user_id'". GZ_order_query_sql($type));
 // $order_all = $db->getAll("SELECT * FROM ".$ecs->table('order_info')." WHERE user_id='$user_id'");
@@ -61,32 +61,35 @@ $pager  = get_pager('user.php', array('act' => $action), $record_count, $page, $
 $orders = GZ_get_user_orders($user_id, $pager['size'], $pager['start'], $type);
 // print_r($orders);exit;
 foreach ($orders as $key => $value) {
-	unset($orders[$key]['order_status']);
-	$orders[$key]['order_time'] = formatTime($value['order_time']);
-	$goods_list = GZ_order_goods($value['order_id']);
-	//$orders[$key]['ss'] = $goods_list;
-	$goods_list_t = array();
-	// $goods_list = API_DATA("SIMPLEGOODS", $goods_list);
-	foreach ($goods_list as $v) {
-		$goods_list_t[] = array(
-		  "goods_id" => $v['goods_id'],
-		  "name" => $v['goods_name'],
-		  "goods_number" => $v['goods_number'],
-		  "subtotal" => price_format($v['subtotal'], false),
-		  "formated_shop_price" => price_format($v['goods_price'], false),
-		  "img" => array(
+  // unset($orders[$key]['order_status']);
+  $orders[$key]['order_time'] = formatTime($value['order_time']);
+  $goods_list = GZ_order_goods($value['order_id']);
+  //$orders[$key]['ss'] = $goods_list;
+  $goods_list_t = array();
+  // $goods_list = API_DATA("SIMPLEGOODS", $goods_list);
+  $goods_total = 0;
+  foreach ($goods_list as $v) {
+    $goods_total += $v['subtotal'];
+    $goods_list_t[] = array(
+      "goods_id" => $v['goods_id'],
+      "name" => $v['goods_name'],
+      "goods_number" => $v['goods_number'],
+      "subtotal" => price_format($v['subtotal'], false),
+      "formated_shop_price" => price_format($v['goods_price'], false),
+      "img" => array(
       'small'=>API_DATA('PHOTO', $v['goods_thumb']),
-			'thumb'=>API_DATA('PHOTO', $v['goods_img']),
-			'url' => API_DATA('PHOTO', $v['original_img'])
-			)
-		);
-	}
+      'thumb'=>API_DATA('PHOTO', $v['goods_img']),
+      'url' => API_DATA('PHOTO', $v['original_img'])
+      )
+    );
+  }
 
-	$orders[$key]['goods_list'] = $goods_list_t;
-	$order_detail = get_order_detail($value['order_id'], $user_id);
-	$orders[$key]['formated_integral_money']   = $order_detail['formated_integral_money'];//积分 钱
-	$orders[$key]['formated_bonus']   = $order_detail['formated_bonus'];//红包 钱
-	$orders[$key]['formated_shipping_fee']   = $order_detail['formated_shipping_fee'];//运送费
+  $orders[$key]['goods_total'] = price_format($goods_total, false);
+  $orders[$key]['goods_list'] = $goods_list_t;
+  $order_detail = get_order_detail($value['order_id'], $user_id);
+  $orders[$key]['formated_integral_money']   = $order_detail['formated_integral_money'];//积分 钱
+  $orders[$key]['formated_bonus']   = $order_detail['formated_bonus'];//红包 钱
+  $orders[$key]['formated_shipping_fee']   = $order_detail['formated_shipping_fee'];//运送费
 
   if ($order_detail['pay_id'] > 0) {
       $payment = payment_info($order_detail['pay_id']);
@@ -107,9 +110,9 @@ foreach ($orders as $key => $value) {
 }
 // print_r($orders);exit;
 $pagero = array(
-		"total"  => $pager['record_count'],	 
-		"count"  => count($orders),
-		"more"   => empty($pager['page_next']) ? 0 : 1
+    "total"  => $pager['record_count'],  
+    "count"  => count($orders),
+    "more"   => empty($pager['page_next']) ? 0 : 1
 );
 GZ_Api::outPut($orders, $pagero);
 
@@ -131,13 +134,13 @@ function GZ_get_user_orders($user_id, $num = 10, $start = 0, $type = 'await_pay'
     /* 取得订单列表 */
     $arr    = array();
 
-    $sql = "SELECT order_id, order_sn, order_status, shipping_status, pay_status, add_time, consignee,province,city,district,address," .
+    $sql = "SELECT order_id, order_sn, order_status, shipping_status, pay_status, add_time, consignee,province,city,district,address,mobile," .
            "(goods_amount + shipping_fee + insure_fee + pay_fee + pack_fee + card_fee + tax - discount) AS total_fee ".
            " FROM " .$GLOBALS['ecs']->table('order_info') .
            " WHERE user_id = '$user_id' " . GZ_order_query_sql($type) . " ORDER BY add_time DESC";
            // print_r($sql);exit;
     $res = $GLOBALS['db']->SelectLimit($sql, $num, $start);
-   	while ($row = $GLOBALS['db']->fetchRow($res))
+    while ($row = $GLOBALS['db']->fetchRow($res))
     {
         $a = array();
         
@@ -161,6 +164,7 @@ function GZ_get_user_orders($user_id, $num = 10, $start = 0, $type = 'await_pay'
 
         $a['consignee'] = $row['consignee'];
         $a['address']   = $row['address'];
+        $a['mobile']    = $row['mobile'];
 
         $row['shipping_status'] = ($row['shipping_status'] == SS_SHIPPED_ING) ? SS_PREPARING : $row['shipping_status'];
         $row['order_status'] = $GLOBALS['_LANG']['os'][$row['order_status']] . ',' . $GLOBALS['_LANG']['ps'][$row['pay_status']] . ',' . $GLOBALS['_LANG']['ss'][$row['shipping_status']];
