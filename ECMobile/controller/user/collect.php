@@ -37,6 +37,20 @@ if (empty($tmp[0])) {
 }
 
 switch ($tmp[0]) {
+    case 'check':
+        $goods_id = _POST('goods_id', 0);
+        if (!$goods_id) {
+            GZ_Api::outPut(101);
+        }
+        $goods = get_goods_info($goods_id);
+        if (!$goods) {
+            GZ_Api::outPut(13);
+        }
+        /* 检查是否已经存在于用户的收藏夹 */
+        $sql = "SELECT COUNT(*) FROM " .$GLOBALS['ecs']->table('collect_goods') .
+            " WHERE user_id='$_SESSION[user_id]' AND goods_id = '$goods_id'";
+        GZ_Api::outPut(array('collected' => $GLOBALS['db']->GetOne($sql) > 0));
+        break;
 	case 'create':
 	    $goods_id = _POST('goods_id', 0);
 		if (!$goods_id) {
@@ -69,6 +83,12 @@ switch ($tmp[0]) {
 		include_once(EC_PATH . '/includes/lib_clips.php');
 
 	    $collection_id = _POST('rec_id', 0);
+        $goods_id = _POST('goods_id', 0);
+        if ($goods_id) {
+            $db->query('DELETE FROM ' .$ecs->table('collect_goods'). " WHERE goods_id='$goods_id' AND user_id =".$_SESSION['user_id'] );
+            GZ_Api::outPut(array());
+        }
+
 		if (!$collection_id) {
 			GZ_Api::outPut(101);
 		}
