@@ -51,6 +51,7 @@ if ( !empty($category) ) {
                 'shop_price'=>$v['shop_price'],    
                 'promote_price'=>$v['promote_price'],    
                 'brief'=>$v['brief'],
+                'desc'=>$v['desc'],
                 'img'=> array(
                     'thumb' => API_DATA('PHOTO', $v['goods_img']),
                     'url' => API_DATA('PHOTO', $v['original_img']),
@@ -80,7 +81,7 @@ function gz_get_category_recommend_goods($type = '', $cats = '', $brand = 0, $mi
 
     $sql =  'SELECT g.goods_id, g.goods_name, g.goods_name_style, g.market_price, g.shop_price AS org_price, g.promote_price, ' .
                 "IFNULL(mp.user_price, g.shop_price * '$_SESSION[discount]') AS shop_price, ".
-                'promote_start_date, promote_end_date, g.goods_brief, g.goods_thumb, goods_img, g.original_img, b.brand_name ' .
+                'promote_start_date, promote_end_date, g.goods_brief, g.goods_desc, g.goods_thumb, goods_img, g.original_img, b.brand_name ' .
             'FROM ' . $GLOBALS['ecs']->table('goods') . ' AS g ' .
             'LEFT JOIN ' . $GLOBALS['ecs']->table('brand') . ' AS b ON b.brand_id = g.brand_id ' .
             "LEFT JOIN " . $GLOBALS['ecs']->table('member_price') . " AS mp ".
@@ -133,6 +134,7 @@ function gz_get_category_recommend_goods($type = '', $cats = '', $brand = 0, $mi
         $goods[$idx]['id']           = $row['goods_id'];
         $goods[$idx]['name']         = $row['goods_name'];
         $goods[$idx]['brief']        = $row['goods_brief'];
+        $goods[$idx]['desc']         = $row['goods_desc'];
         $goods[$idx]['brand_name']   = $row['brand_name'];
         $goods[$idx]['short_name']   = $GLOBALS['_CFG']['goods_name_length'] > 0 ?
                                        sub_str($row['goods_name'], $GLOBALS['_CFG']['goods_name_length']) : $row['goods_name'];
